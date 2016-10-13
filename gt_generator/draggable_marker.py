@@ -17,12 +17,22 @@ class DraggableMarker(object):
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
     lock = None  # only one can be animated at a time
 
-    def __init__(self, mark, img):
+    def __init__(self, mark, img, num=None):
         """Initialize a DraggableMarker, with the img for later refinement."""
         self.img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
         self.mark = mark
         self.press = None
         self.background = None
+        self.text = None
+        self.selected = False
+        self.num = num
+        self._set_annotation()
+        self.mark.figure.canvas.draw()
+
+    def _set_annotation(self):
+        """Set the annotation number of marker."""
+        x, y = self.mark.get_xydata()[0]
+        self.text = self.mark.axes.text(x +20 , y+20, str(self.num), bbox=dict(facecolor='red', alpha=0.5))
 
     def connect(self):
         """Connect to all needed Events."""
@@ -37,8 +47,12 @@ class DraggableMarker(object):
 
     def on_press(self, event):
         """Check on button press if mouse is over this DraggableMarker."""
+
+        # if the event is not in the axes return
         if event.inaxes != self.mark.axes:
             return
+
+        # checks if other DraggableMarker is alredy chosen
         if DraggableMarker.lock is not None:
             return
 
@@ -46,9 +60,22 @@ class DraggableMarker(object):
         contains, attrd = self.mark.contains(event)
         if not contains:
             return
-        x, y = self.mark.get_xydata()[0]
+
+        # removes the annotation
+        self.text.remove()
+
+        # set back the color to red to mark that is not refined and remove
+        # selection flag
         self.mark.set_color('r')
+        self.selected = False
+
+        # get the current coordinates of the marker
+        x, y = self.mark.get_xydata()[0]
+
+        # cache the coordinates and the event coordinates
         self.press = x, y, event.xdata, event.ydata
+
+        # Locks the dragging of other DraggableMarker
         DraggableMarker.lock = self
 
         # draw everything but the selected marker and store the pixel buffer
@@ -78,6 +105,7 @@ class DraggableMarker(object):
 
         canvas = self.mark.figure.canvas
         axes = self.mark.axes
+
         # restore the background region
         canvas.restore_region(self.background)
 
@@ -99,6 +127,8 @@ class DraggableMarker(object):
         self.mark.set_animated(False)
         self.background = None
 
+        # redraw the annotation to the new position
+        self._set_annotation()
         # redraw the full figure
         self.mark.figure.canvas.draw()
 
@@ -109,6 +139,7 @@ class DraggableMarker(object):
         contains, attrd = self.mark.contains(event)
         if not contains:
             return
+        # this will refine the current position of the marker
         if event.key == 'b':
             log.info(
                 'You pressed {}, the marker will be refined!'.format(event.key))
@@ -119,7 +150,17 @@ class DraggableMarker(object):
             self.mark.set_xdata(xy_new[0][0][0])
             self.mark.set_ydata(xy_new[0][0][1])
             self.mark.set_color('g')
-            plt.show()
+            self.text.remove()
+            self._set_annotation()
+            self.mark.figure.canvas.draw()
+        elif event.key == 'x':
+            if self.selected is False:
+                self.mark.set_color('y')
+                self.selected = True
+            else:
+                self.mark.set_color('r')
+                self.selected = False
+            self.mark.figure.canvas.draw()
 
     def disconnect(self):
         """disconnect all the stored connection ids."""
@@ -136,20 +177,6 @@ def dms_to_pts(dms_list):
     for i, dm in enumerate(dms_list):
         pts[i] = dm.mark.get_xydata()[0]
     return pts
-
-
-def add_draggable_marker(event, axis, dms, img):
-    """Add a DraggableMarker to the axis and to the list dms."""
-    log.info('Create draggable Marker.')
-    log.debug('x = ' + str(event.xdata) + ' | y = ' + str(event.xdata))
-    marker, = axis.plot(event.xdata, event.ydata, 'xr', markersize=20, markeredgewidth=2)
-
-    # initialize draggable marker that is initialized with a Marker but
-    # will move its x,y location when dragged
-    dm = DraggableMarker(marker, img)
-    dm.connect()
-    dms.add(dm)
-    plt.show()
 
 
 def refine(img, corner):

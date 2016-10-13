@@ -11,13 +11,20 @@ class GroundTruthGenerator(object):
     """Class to generate Ground-Truth data for bb_fb_stitcher."""
 
     def __init__(self, img_l, img_r, angle_l=90, angle_r=-90):
+        self.angle_l = angle_l
+        self.angle_r = angle_r
+        self.img_l = img_l
+        self.img_r = img_r
         rt = Rotator()
         self.img_l = rt.rotate_image(img_l, angle_l)
         self.img_r = rt.rotate_image(img_r, angle_r)
 
     def get_point_pairs(self):
         adj = point_picker.PointPicker(self.img_l, self.img_r)
-        adj.pick()
+        points_left, points_right = adj.pick()
+        rt = Rotator()
+        rt.rotate_points(points_left, -self.angle_r)
+
 
 
 def main():
