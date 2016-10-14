@@ -169,6 +169,36 @@ class DraggableMarker(object):
         self.mark.figure.canvas.mpl_disconnect(self.c_id_motion)
         self.mark.figure.canvas.draw()
 
+class DraggableMarkerStack(object):
+    def __init__(self, list = []):
+        self.list = list
+
+    def append(self, dm):
+        self.list.append(dm)
+
+    def pop(self, dm):
+        if len(self.list) >= 0:
+            self.list.pop()
+
+    def get_pts(self):
+        pts = np.zeros(1,(len(self.list),2), np.float32)
+        for i, dm in enumerate(self.list):
+            pts[0][i] = dm.mark.get_xydata()[0]
+        return pts
+
+    def get_selected_pts(self):
+        selected = []
+        for i, dm in enumerate(self.list):
+            if dm.mark is True:
+                selected.append(dm)
+
+        pts = np.zeros((1, len(selected), 2), np.float32)
+        for i, dm in enumerate(self.list):
+            pts[0][i] = dm.mark.get_xydata()[0]
+        return pts
+
+
+
 
 def dms_to_pts(dms_list):
     """Extract the coordinates of the draggable Markers from a list."""
