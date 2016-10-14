@@ -24,8 +24,8 @@ def process_images(args):
     img_l =cv2.imread(args.left, -1)
     img_r =cv2.imread(args.right, -1)
 
-    pp = core.GroundTruthGenerator(img_l, img_r, args.left_angle, args.right_angle)
-    pts_left, pts_right = pp.get_point_pairs()
+    pp = core.GroundTruthGenerator(args.left_angle, args.right_angle)
+    pts_left, pts_right = pp.get_point_pairs(img_l, img_r)
 
     pp.save_data(file_path)
     print('Saved points coordinates to: {} '.format(file_path))

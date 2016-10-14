@@ -11,21 +11,23 @@ log = getLogger(__name__)
 class GroundTruthGenerator(object):
     """Class to generate Ground-Truth data for bb_fb_stitcher."""
 
-    def __init__(self, img_l, img_r, angle_l=90, angle_r=-90):
+    def __init__(self, angle_l=90, angle_r=-90):
         self.angle_left = angle_l
         self.angle_right = angle_r
-        rt = Rotator()
-        self.img_l = rt.rotate_image(img_l, angle_l)
-        self.img_r = rt.rotate_image(img_r, angle_r)
+
+
         self.points_left = None
         self.points_right = None
 
-    def get_point_pairs(self):
-        adj = point_picker.PointPicker(self.img_l, self.img_r)
+    def get_point_pairs(self, img_l, img_r):
+        rt = Rotator()
+        rot_img_l = rt.rotate_image(img_l, self.angle_left)
+        rot_img_r = rt.rotate_image(img_r, self.angle_right)
+        adj = point_picker.PointPicker(rot_img_l, rot_img_r)
         points_left, points_right = adj.pick()
         rt = Rotator()
-        self.points_left = rt.rotate_points(points_left, -self.angle_left, self.img_l.shape)
-        self.points_right = rt.rotate_points(points_right, -self.angle_right, self.img_r.shape)
+        self.points_left = rt.rotate_points(points_left, -self.angle_left, rot_img_l.shape)
+        self.points_right = rt.rotate_points(points_right, -self.angle_right, rot_img_r.shape)
         return self.points_left, self.points_right
 
     def save_data(self, path):
