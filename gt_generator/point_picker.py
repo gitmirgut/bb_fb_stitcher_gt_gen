@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 from composer import helpers
-from gt_generator.draggable_marker import DraggableMarker
+from gt_generator.draggable_marker import DraggableMarker, DraggableMarkerStack
 from gt_generator.draggable_marker import dms_to_pts
 
 
@@ -15,7 +15,7 @@ class PointPicker(object):
         self.count_dms_left = 0
         self.count_dms_right = 0
 
-    def pick(self):
+    def pick(self, selected = False):
         """Initialise GUI to pick 4 points on each side.
 
         A matplot GUI will be initialised, where the user has to pick 4 points
@@ -47,16 +47,20 @@ class PointPicker(object):
         ax_right.imshow(self.right_img)
 
         # Initialize list for storing the DraggableMarkers
-        dms_left = []
-        dms_right = []
+        dms_left = DraggableMarkerStack()
+        dms_right = DraggableMarkerStack()
 
         # TODO c_id
         c_id = fig.canvas.mpl_connect('button_press_event', _on_click)
         plt.show()
         # assert ((len(dms_left) == 4) and (len(dms_right) == 4))
-        points_left = dms_to_pts(dms_left)
-        points_right = dms_to_pts(dms_right)
+        # points_left = dms_to_pts(dms_left)
+        # points_right = dms_to_pts(dms_right)
+        if selected is True:
+            points_left = dms_left.get_selected_pts()
+            points_right = dms_right.get_selected_pts()
+        else:
+            points_left = dms_left.get_pts()
+            points_right = dms_right.get_pts()
 
-        points_left = np.array([points_left])
-        points_right = np.array([points_right])
         return points_left, points_right

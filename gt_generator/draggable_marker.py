@@ -170,8 +170,11 @@ class DraggableMarker(object):
         self.mark.figure.canvas.draw()
 
 class DraggableMarkerStack(object):
-    def __init__(self, list = []):
-        self.list = list
+    def __init__(self):
+        self.list = []
+
+    def __len__(self):
+        return len(self.list)
 
     def append(self, dm):
         self.list.append(dm)
@@ -181,7 +184,7 @@ class DraggableMarkerStack(object):
             self.list.pop()
 
     def get_pts(self):
-        pts = np.zeros(1,(len(self.list),2), np.float32)
+        pts = np.zeros((1,len(self.list),2), np.float32)
         for i, dm in enumerate(self.list):
             pts[0][i] = dm.mark.get_xydata()[0]
         return pts
@@ -189,13 +192,14 @@ class DraggableMarkerStack(object):
     def get_selected_pts(self):
         selected = []
         for i, dm in enumerate(self.list):
-            if dm.mark is True:
+            if dm.selected is True:
                 selected.append(dm)
 
         pts = np.zeros((1, len(selected), 2), np.float32)
-        for i, dm in enumerate(self.list):
+        for i, dm in enumerate(selected):
             pts[0][i] = dm.mark.get_xydata()[0]
         return pts
+
 
 
 
