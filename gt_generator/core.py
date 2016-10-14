@@ -26,7 +26,7 @@ class GroundTruthGenerator(object):
         rt = Rotator()
         self.points_left = rt.rotate_points(points_left, -self.angle_left, self.img_l.shape)
         self.points_right = rt.rotate_points(points_right, -self.angle_right, self.img_r.shape)
-        return points_left, points_right
+        return self.points_left, self.points_right
 
     def save_data(self, path):
         np.savez(path,
