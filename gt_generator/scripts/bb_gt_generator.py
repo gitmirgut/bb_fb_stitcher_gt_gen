@@ -15,24 +15,22 @@ def process_images(args):
     if os.path.isdir(args.data):
         start_time_l = fb_stitcher.helpers.get_start_datetime(args.left)
         start_time_r = fb_stitcher.helpers.get_start_datetime(args.right)
-        output_path = ''.join([start_time_l, '_GT_', start_time_r, '.npz'])
+        output_path = ''.join([start_time_l, '_GT_', start_time_r, '.json'])
         file_path = os.path.join(args.data, output_path)
     else:
         file_path = args.data
 
+    pp = core.GroundTruthGenerator(args.left, args.right, args.left_angle, args.right_angle)
+    pts_left, pts_right = pp.get_point_pairs()
 
-    img_l =cv2.imread(args.left, -1)
-    img_r =cv2.imread(args.right, -1)
-
-    pp = core.GroundTruthGenerator(args.left_angle, args.right_angle)
-    pts_left, pts_right = pp.get_point_pairs(img_l, img_r)
-
-    pp.save_data(file_path)
+    pp.save_2_json(file_path)
     print('Saved points coordinates to: {} '.format(file_path))
 
     if args.pano is not None:
         if os.path.isdir(args.pano[0]):
             print(args.pano)
+            img_l = cv2.imread(args.left, -1)
+            img_r = cv2.imread(args.right, -1)
             img_l_marked = gt_generator.helpers.draw_makers(img_l, pts_left)
             img_r_marked = gt_generator.helpers.draw_makers(img_r, pts_right)
 
