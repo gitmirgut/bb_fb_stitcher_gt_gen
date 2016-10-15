@@ -3,6 +3,9 @@ import gt_generator.point_picker as point_picker
 import numpy as np
 from fb_stitcher.rotator import Rotator
 from logging import getLogger
+import csv
+import datetime
+import json
 
 
 log = getLogger(__name__)
@@ -44,6 +47,54 @@ class GroundTruthGenerator(object):
             self.points_right = data['points_right']
             self.angle_left = data['angle_left']
             self.angle_right = data['angle_right']
+
+    @DeprecationWarning
+    def save_2_csv(self, path):
+        date_created = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+
+        with open(path, 'w', newline='') as csvfile:
+            fieldnames = ['date_created', 'left_image', 'right_image', 'left_angle', 'right_angle', 'points_left', 'points_right']
+            writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+            writer.writeheader()
+            writer.writerow({
+                'date_created': date_created,
+                'left_image': '',
+                'right_image': '',
+                'left_angle': self.angle_left,
+                'right_angle': self.angle_right,
+                'points_left': self.points_left.tolist(),
+                'points_right': self.points_right.tolist()
+            })
+
+    @DeprecationWarning
+    def load_csv(self, path):
+        with open(path, 'r', newline='') as csvfile:
+            reader = csv.DictReader(csvfile, delimiter=';')
+            for row in reader:
+                print(row['points_left'])
+                points = np.fromstring(row['points_left'])
+                print(points)
+
+    def save_2_json(self, path):
+        date_created = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
+        dict = {
+                'date_created': date_created,
+                'left_image': '',
+                'right_image': '',
+                'left_angle': self.angle_left.tolist(),
+                'right_angle': self.angle_right.tolist(),
+                'points_left': self.points_left.tolist(),
+                'points_right': self.points_right.tolist()
+            }
+
+        with open(path, 'w', newline='') as jsonfile:
+            json.dump(dict, jsonfile, indent=2, sort_keys=False)
+
+    def load_json(self, path):
+        with open(path, 'r') as jsonfile:
+            d = json.load(jsonfile)
+            print(np.array(d['points_left']))
+
 
 def draw_makers(img, pts, color=(0, 0, 255),
                 marker_types=cv2.MARKER_TILTED_CROSS):
