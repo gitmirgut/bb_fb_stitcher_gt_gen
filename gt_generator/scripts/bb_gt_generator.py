@@ -42,14 +42,13 @@ def process_images(args):
 
 def main():
     parser = argparse.ArgumentParser(
-        prog = 'BeesBook feature based Stitcher.',
-        description = 'This will stitch two images and return the needed data '
-                      ' for reproducing the stitching (,also with points).',
+        prog = 'BeesBook Ground Truth Generator for Evaluation of Stitcher.',
+        description = 'Mark Points as equal.',
         formatter_class=RawTextHelpFormatter
     )
     parser.add_argument('left', help='Path of the left image.', type=str)
-    parser.add_argument('left_angle', help='Rotation angle of the left image', type=int)
     parser.add_argument('right', help='Path of the left image.', type=str)
+    parser.add_argument('left_angle', help='Rotation angle of the left image', type=int)
     parser.add_argument('right_angle', help='Rotation angle of the right image', type=int)
     parser.add_argument('data', help='Output directory/path of the points data.', type=str)
     parser.add_argument('--pano', '-p', nargs=1, help='Path of the marked images.')
