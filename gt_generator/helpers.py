@@ -3,6 +3,9 @@ import numpy as np
 
 def draw_makers(img, pts, color=(0, 0, 255),
                 marker_types=cv2.MARKER_TILTED_CROSS):
+    print(pts)
+    if pts is None:
+        return img
     img_m = np.copy(img)
     pts = pts[0].astype(int)
     for i, pt in enumerate(pts):

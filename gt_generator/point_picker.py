@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import gt_generator.helpers as helperss
 import numpy as np
 
 from composer import helpers
@@ -9,9 +10,10 @@ from gt_generator.draggable_marker import dms_to_pts
 class PointPicker(object):
     """GUI for picking points."""
 
-    def __init__(self, img_l, right_img):
-        self.img_l = img_l
-        self.right_img = right_img
+    def __init__(self, img_l, right_img, left_old_pts, right_old_pts):
+        print(left_old_pts)
+        self.img_l = helperss.draw_makers(img_l, right_old_pts)
+        self.right_img = helperss.draw_makers(right_img, left_old_pts)
         self.count_dms_left = 0
         self.count_dms_right = 0
 
@@ -53,7 +55,8 @@ class PointPicker(object):
         # TODO c_id
         c_id = fig.canvas.mpl_connect('button_press_event', _on_click)
         plt.show()
-        # assert ((len(dms_left) == 4) and (len(dms_right) == 4))
+
+        assert len(dms_left) == len(dms_right)
         # points_left = dms_to_pts(dms_left)
         # points_right = dms_to_pts(dms_right)
         if selected is True:

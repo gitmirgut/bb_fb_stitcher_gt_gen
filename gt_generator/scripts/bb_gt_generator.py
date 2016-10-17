@@ -23,7 +23,7 @@ def process_images(args):
     pp = core.GroundTruthGenerator(args.left, args.right, args.left_angle, args.right_angle)
     pts_left, pts_right = pp.get_point_pairs()
 
-    pp.save_2_json(file_path)
+    pp.save_2_csv(file_path)
     print('Saved points coordinates to: {} '.format(file_path))
 
     if args.pano is not None:
