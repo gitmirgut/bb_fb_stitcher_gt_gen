@@ -10,6 +10,6 @@ def draw_makers(img, pts, color=(0, 0, 255),
     pts = pts[0].astype(int)
     for i, pt in enumerate(pts):
         cv2.drawMarker(img_m, tuple(pt), color, markerType=marker_types,
-                       markerSize=40, thickness=3)
+                       markerSize=20, thickness=3)
         cv2.putText(img_m, str(i), tuple(pt), cv2.FONT_HERSHEY_SIMPLEX,2,(0,0,255))
     return img_m

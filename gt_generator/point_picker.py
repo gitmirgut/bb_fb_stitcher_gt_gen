@@ -10,10 +10,9 @@ from gt_generator.draggable_marker import dms_to_pts
 class PointPicker(object):
     """GUI for picking points."""
 
-    def __init__(self, img_l, right_img, left_old_pts, right_old_pts):
-        print(left_old_pts)
-        self.img_l = helperss.draw_makers(img_l, right_old_pts)
-        self.right_img = helperss.draw_makers(right_img, left_old_pts)
+    def __init__(self, img_l, right_img):
+        self.img_l = img_l
+        self.right_img = right_img
         self.count_dms_left = 0
         self.count_dms_right = 0
 
@@ -36,7 +35,7 @@ class PointPicker(object):
                 elif event.inaxes == ax_right and len(dms_right) <= len(dms_left):
                     self.count_dms_right += 1
                     marker, = ax_right.plot(event.xdata, event.ydata, 'xr', markersize=10, markeredgewidth=2)
-                    dm = DraggableMarker(marker, self.img_l, self.count_dms_right)
+                    dm = DraggableMarker(marker, self.right_img, self.count_dms_right)
                     dm.connect()
                     dms_right.append(dm)
 

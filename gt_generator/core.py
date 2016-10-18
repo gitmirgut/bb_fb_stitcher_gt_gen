@@ -4,10 +4,10 @@ import numpy as np
 from fb_stitcher.rotator import Rotator
 from logging import getLogger
 import datetime
-import json
 import os
 import csv
 import ast
+import gt_generator.helpers as helpers
 
 
 log = getLogger(__name__)
@@ -28,15 +28,11 @@ class GroundTruthGenerator(object):
         self.right_entries_id = []
         self.path_csv = path_csv
         self.__load_csv()
-        self.left_entries_id, self.right_entries_id = self.__get_existing_entries()
-        if len(self.left_entries_id) + len(self.right_entries_id) > 0:
-            print("There exist entries based on same images lef: {} right: {}".format(self.left_entries_id, self.right_entries_id))
-        self.left_old_pts = None
-        self.right_old_pts = None
+
+        # New implementation #TODO draw_old Points setzen
         self.draw_old_points = draw_old_points
-        if self.draw_old_points:
-            self.left_old_pts, self.right_old_pts = self.get_old_points()
-        print(self.left_old_pts)
+        self.entry_ids, self.csv_points_left, self.csv_points_right = GroundTruthGenerator.get_old_data(self.entries, self.left_path, self.right_path)
+
 
     def get_point_pairs(self):
 
@@ -44,16 +40,15 @@ class GroundTruthGenerator(object):
         img_r = cv2.imread(self.right_path, -1)
 
         rt = Rotator()
-        if self.draw_old_points and self.left_old_pts is not None:
-            rot_left_old_pts = rt.rotate_points(self.left_old_pts, self.angle_left, img_l.shape)
-            rot_right_old_pts = rt.rotate_points(self.right_old_pts, self.angle_right, img_r.shape)
-        else:
-            rot_left_old_pts = None
-            rot_right_old_pts = None
+
+        if self.csv_points_left is not None and self.csv_points_right is not None:
+            img_l = helpers.draw_makers(img_l, self.csv_points_left)
+            img_r = helpers.draw_makers(img_r, self.csv_points_right)
+
         rot_img_l = rt.rotate_image(img_l, self.angle_left)
         rot_img_r = rt.rotate_image(img_r, self.angle_right)
 
-        adj = point_picker.PointPicker(rot_img_l, rot_img_r, rot_left_old_pts, rot_right_old_pts)
+        adj = point_picker.PointPicker(rot_img_l, rot_img_r)
         points_left, points_right = adj.pick()
         rt = Rotator()
         self.points_left = rt.rotate_points(points_left, -self.angle_left, rot_img_l.shape)
@@ -111,42 +106,28 @@ class GroundTruthGenerator(object):
                 self.entries.append(data)
         return self.entries
 
-    def __get_existing_entries(self):
-        """Return ids of datasets  which already exist for the images."""
-        left_basename = os.path.basename(self.left_path)
-        right_basename = os.path.basename(self.right_path)
-        self.left_entries_id = []
-        self.right_entries_id = []
-        for entry in self.entries:
-            image_names = [entry['left_image'], entry['right_image']]
-            if left_basename in image_names:
-                self.left_entries_id.append(entry['id'])
-            if right_basename in image_names:
-                self.right_entries_id.append(entry['id'])
 
-        return self.left_entries_id, self.right_entries_id
-
-    def get_old_points(self):
+    @staticmethod
+    def get_old_data(entries, left_filename, right_filename):
+        left_basename = os.path.basename(left_filename)
+        right_basename = os.path.basename(right_filename)
         left_old_points = None
         right_old_points = None
-        if len(self.entries) > 0 and self.left_entries_id:
-            for left_entry_id in self.left_entries_id:
-                for entry in self.entries:
-                    if left_entry_id == entry['id']:
-                        if left_old_points is None:
-                            left_old_points = entry['points_left'][0]
-                        else:
-                            left_old_points = np.vstack((left_old_points, entry['points_left'][0]))
-        if len(self.entries) > 0 and self.right_entries_id:
-            for right_entry_id in self.right_entries_id:
-                for entry in self.entries:
-                    if right_entry_id == entry['id']:
-                        if right_old_points is None:
-                            right_old_points = entry['points_right'][0]
-                        else:
-                            right_old_points = np.vstack((right_old_points, entry['points_right'][0]))
-        if left_old_points is not None:
-            left_old_points = np.array([left_old_points])
-        if right_old_points is not None:
-            right_old_points = np.array([right_old_points])
-        return left_old_points, right_old_points
+        entry_ids = None
+        for entry in entries:
+            if left_basename == entry['left_image']:
+                assert right_basename == entry['right_image']
+                if entry_ids is None:
+                    assert left_old_points is None and right_old_points is None and len(entry['points_left'][0]) == len(entry['points_right'][0])
+                    entry_ids = [entry['id']]
+                    left_old_points = entry['points_left'][0]
+                    right_old_points = entry['points_right'][0]
+                else:
+                    assert len(entry['points_left'][0]) == len(entry['points_right'][0])
+                    entry_ids.append(entry['id'])
+                    left_old_points = np.vstack((left_old_points, entry['points_left'][0]))
+                    right_old_points = np.vstack((right_old_points, entry['points_right'][0]))
+        if left_old_points is None:
+            assert right_old_points is None and entry_ids is None
+            return None, None, None
+        return entry_ids, np.array([left_old_points]), np.array([right_old_points])
