@@ -38,8 +38,8 @@ class GroundTruthGenerator(object):
 
     def get_point_pairs(self):
 
-        img_l = cv2.imread(self.left_path, -1)
-        img_r = cv2.imread(self.right_path, -1)
+        img_l = cv2.imread(self.left_path)
+        img_r = cv2.imread(self.right_path)
 
         rt = Rotator()
 
