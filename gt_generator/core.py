@@ -8,6 +8,8 @@ import os
 import csv
 import ast
 import gt_generator.helpers as helpers
+import sys
+import random as ran
 
 
 log = getLogger(__name__)
@@ -24,14 +26,14 @@ class GroundTruthGenerator(object):
         self.points_left = None
         self.points_right = None
         self.entries=[]
-        self.left_entries_id = []
-        self.right_entries_id = []
         self.path_csv = path_csv
         self.__load_csv()
 
         # New implementation #TODO draw_old Points setzen
         self.draw_old_points = draw_old_points
         self.entry_ids, self.csv_points_left, self.csv_points_right = GroundTruthGenerator.get_old_data(self.entries, self.left_path, self.right_path)
+        if self.entry_ids is not None:
+            print("There already existing entries with the following ids {} in {}".format(self.entry_ids, self.path_csv))
 
 
     def get_point_pairs(self):
@@ -42,8 +44,9 @@ class GroundTruthGenerator(object):
         rt = Rotator()
 
         if self.csv_points_left is not None and self.csv_points_right is not None:
-            img_l = helpers.draw_makers(img_l, self.csv_points_left)
-            img_r = helpers.draw_makers(img_r, self.csv_points_right)
+            # img_l = helpers.draw_makers(img_l, self.csv_points_left)
+            # img_r = helpers.draw_makers(img_r, self.csv_points_right)
+            img_l, img_r = self.show_points(img_l, img_r)
 
         rot_img_l = rt.rotate_image(img_l, self.angle_left)
         rot_img_r = rt.rotate_image(img_r, self.angle_right)
@@ -54,6 +57,17 @@ class GroundTruthGenerator(object):
         self.points_left = rt.rotate_points(points_left, -self.angle_left, rot_img_l.shape)
         self.points_right = rt.rotate_points(points_right, -self.angle_right, rot_img_r.shape)
         return self.points_left, self.points_right
+
+    def request_2_save(self):
+        store = helpers.query_yes_no("Want to save to {}".format(self.path_csv), "no")
+        current_entry_id = 1
+        if self.entry_ids is not None:
+            current_entry_id = self.entry_ids[-1]+1
+        if store:
+            self.save_2_csv()
+            print("Data was saved with id: {} to\n{}".format(current_entry_id,self.path_csv))
+        else:
+            print("--> Data was not saved.")
 
     def save_2_csv(self):
         date_created = datetime.datetime.now().strftime("%Y-%m-%dT%H:%M:%S")
@@ -69,6 +83,7 @@ class GroundTruthGenerator(object):
         with open(self.path_csv, 'a+', newline='') as csvfile:
             fieldnames = ['id','date_created', 'left_image', 'right_image', 'left_angle', 'right_angle', 'points_left', 'points_right']
             writer = csv.DictWriter(csvfile, fieldnames=fieldnames, delimiter=';')
+            assert self.points_left is not None and self.points_right is not None
 
             # write header if file is new
             if not file_exists:
@@ -131,3 +146,14 @@ class GroundTruthGenerator(object):
             assert right_old_points is None and entry_ids is None
             return None, None, None
         return entry_ids, np.array([left_old_points]), np.array([right_old_points])
+
+    def show_points(self, img_l, img_r):
+        for entry in self.entries:
+            if entry['id'] in self.entry_ids:
+                color = (ran.randint(0,255), ran.randint(0,255), ran.randint(0,255))
+                img_l = helpers.draw_makers_with_id(img_l, entry['points_left'], entry['id'], color)
+                img_r = helpers.draw_makers_with_id(img_r, entry['points_right'], entry['id'], color)
+        return img_l, img_r
+
+
+
