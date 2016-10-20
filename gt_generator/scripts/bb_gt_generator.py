@@ -17,7 +17,7 @@ def process_images(args):
     pp = core.GroundTruthGenerator(args.left, args.right, args.left_angle, args.right_angle, args.data)
     pts_left, pts_right = pp.get_point_pairs()
     pp.request_2_save()
-    print('Saved points coordinates to: {} '.format(args.data))
+
 
 def main():
     parser = argparse.ArgumentParser(
