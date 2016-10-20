@@ -25,9 +25,9 @@ class GroundTruthGenerator(object):
         self.right_path = right_path
         self.points_left = None
         self.points_right = None
-        self.entries=[]
+        self.entries= GroundTruthGenerator.load_csv(path_csv)
         self.path_csv = path_csv
-        self.__load_csv()
+        # self.__load_csv()
 
         # New implementation #TODO draw_old Points setzen
         self.draw_old_points = draw_old_points
@@ -99,13 +99,13 @@ class GroundTruthGenerator(object):
                 'points_left': self.points_left.tolist(),
                 'points_right': self.points_right.tolist()
             })
-
-    def __load_csv(self):
+    @staticmethod
+    def load_csv(csvfile):
         """Return a list of datasets as dicts."""
-        self.entries = []
-        if self.path_csv is None or not os.path.isfile(self.path_csv):
-            return self.entries
-        with open(self.path_csv, 'r', newline='') as csvfile:
+        entries = []
+        if csvfile is None or not os.path.isfile(csvfile):
+            return entries
+        with open(csvfile, 'r', newline='') as csvfile:
             reader = csv.DictReader(csvfile, delimiter=';')
             for row in reader:
                 data = {
@@ -118,8 +118,8 @@ class GroundTruthGenerator(object):
                     'points_left': np.array(ast.literal_eval(row['points_left'])),
                     'points_right': np.array(ast.literal_eval(row['points_right']))
                 }
-                self.entries.append(data)
-        return self.entries
+                entries.append(data)
+        return entries
 
 
     @staticmethod
